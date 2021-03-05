@@ -1,0 +1,40 @@
+pipeline {
+    environment {
+        dockerImage = "dock-testing"
+    }
+    agent any
+
+    stages {
+        stage('Carregando o ENV de desenvolvimento') {
+            steps {
+                configFileProvider([configFile(fileId: 'c7ba3a1d-dc96-4f91-a57a-bdef49703e18', variable: 'env')]) {
+                    sh 'cat $env > .env'
+                }
+            }
+        }
+        stage('Derrubando o container antigo') {
+            steps {
+                script {
+                    try {
+                        sh 'docker rm -f dock-testing'
+                    } catch (Exception e) {
+                        sh "echo $e"
+                    }
+                }
+            }
+        }        
+        stage('Subindo o container novo') {
+            steps {
+                script {
+                    try {
+                        sh 'docker run -d -p 82:8000 -v /var/lib/jenkins/workspace/jenkins-desenvolvimento/.env:/usr/src/app/api/.env --name=dock-testing ' + dockerImage + ':latest'
+                    } catch (Exception e) {
+                        sh "echo $e"
+                        currentBuild.result = 'ABORTED'
+                        error('Erro')
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,218 @@
+openapi: "3.0.0"
+info:
+  description: "This is an API for the DOCK backend developer test."
+  version: "1.0.0"
+  title: "DOCK API"
+tags:
+- name: "Account"
+  description: "Account management"
+paths:
+  /account:
+    post:
+      tags:
+      - "Account"
+      summary: "Create a new account"
+      description: "Creates a new bank account for a person. If the person doesnt exists, the person is also created."
+      requestBody:
+        description: "Person and account details that need to be sent"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountCreate"
+      responses:
+        "201":
+          description: "Account created"
+        "400":
+          description: "Bad request"
+        "500":
+          description: "An error ocurred during the operation"
+  /account/deposit/{accountId}:
+    patch:
+      tags:
+      - "Account"
+      summary: "Makes a deposit on the informed account"
+      parameters:
+      - in: "path"
+        name: "accountId"
+        description: "Account ID"
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: "successful deposit"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfullDeposit"
+        "400":
+          description: "Bad request"
+        "500":
+          description: "An error ocurred during the operation"
+  /account/withdrawal/{accountId}:
+    patch:
+      tags:
+      - "Account"
+      summary: "Withdraws money from an account"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "Account ID"
+        required: true
+        schema:
+          type: "integer"
+      responses:
+        "200":
+          description: "successful withdrawal"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfullWithdrawal"
+        "400":
+          description: "Bad request"
+        "500":
+          description: "An error ocurred during the operation"
+  /account/block/{accountId}:
+    patch:
+      tags:
+      - "Account"
+      summary: "Blocks an account"
+      parameters:
+      - in: "path"
+        name: "accountId"
+        description: "Account ID"
+        required: true
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: "Account successfully blocked"
+        "400":
+          description: "Bad request"
+        "500":
+          description: "An error ocurred during the operation"
+  /account/balance/{accountId}:
+    get:
+      tags:
+      - "Account"
+      summary: "Retrieve the account balance"
+      parameters:
+      - in: "path"
+        name: "accountId"
+        description: "Account ID"
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: "Balance retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountBalance"
+        "400":
+          description: "Bad request"
+        "500":
+          description: "An error ocurred during the operation"
+  /account/extract/{accountId}:
+    get:
+      tags:
+      - "Account"
+      summary: "Retrieve the account balance"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "Account ID"
+        required: true
+        schema:
+          type: "integer"
+      - name : "initialDate"
+        in: "query"
+        description: "Initial date for the extract filter"
+        schema:
+          type: "string"
+          example: "2021-04-01T21:23:49.081Z"
+      - in: "query"
+        name : "finalDate"
+        schema:
+          description: "Final date for the extract filter"
+          type: "string"
+          example: "2021-04-02T21:23:49.081Z"
+      responses:
+        "200":
+          description: "Balance retrieved"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountExtract"
+        "400":
+          description: "Bad request"
+        "500":
+          description: "An error ocurred during the operation"
+components:
+  schemas:
+    AccountCreate:
+      type: "object"
+      required:
+      - "personName"
+      - "personDocument"
+      - "personBirthdate"
+      properties:
+        personName:
+          type: "string"
+          example: "Fulano da Silva"
+        personDocument:
+          type: "string"
+          example: "11122233366"
+        personBirthdate:
+          type: "string"
+          example: "1996-12-31"
+        accountType:
+          type: "integer"
+          description: "account type"
+        dailyWithdrawalLimit:
+          type: "number"
+          example: 1000.51
+          description: "account withdrawal limit in cents"
+    SuccessfullDeposit:
+      type: "object"
+      properties:
+        newBalance:
+          type: "string"
+          example: "100.50"
+          description: "The new balance from the account"
+    SuccessfullWithdrawal:
+      type: "object"
+      properties:
+        newBalance:
+          type: "string"
+          example: "100.50"
+          description: "The new balance from the account"
+    AccountBalance:
+      type: "object"
+      properties:
+        balance:
+          type: "string"
+          example: "100.50"
+          description: "The account balance"
+    AccountExtract:
+      type: "array"
+      items:
+        $ref: '#/components/schemas/TransactionExtract'
+    TransactionExtract:
+      type: "object"
+      properties:
+        operation:
+          type: "string"
+          enum: ["deposit", "withdrawal"]
+          description: "Operation type"
+          example: "deposit"
+        value:
+          type: "string"
+          description: "The movement value"
+          example: "100.55"
+        date:
+          type: "string"
+          description: "The operation date"
+          example: "2021-03-02T21:23:49.081Z"
